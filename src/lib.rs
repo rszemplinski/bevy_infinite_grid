@@ -79,7 +79,8 @@ pub struct InfiniteGridBundle {
     pub grid: InfiniteGrid,
     pub frustum_intersect: GridFrustumIntersect,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
     pub shadow_casters: VisibleEntities,
     pub no_frustum_culling: NoFrustumCulling,
 }
@@ -231,22 +232,22 @@ fn track_caster_visibility(
         (
             Entity,
             &Visibility,
-            &mut ComputedVisibility,
+            &mut ViewVisibility,
             Option<(&GlobalTransform, &Aabb)>,
         ),
         (With<Handle<Mesh>>, Without<NotShadowCaster>),
     >,
 ) {
-    for (mut visibles, _grid_transform, _grid) in grids.iter_mut() {
-        visibles.entities.clear();
-        for (entity, visibility, mut computed, _intersect_testable) in meshes.iter_mut() {
+    for (mut visible_entities, _grid_transform, _grid) in grids.iter_mut() {
+        visible_entities.entities.clear();
+        for (entity, visibility, mut view_visibility, _intersect_testable) in meshes.iter_mut() {
             if let Visibility::Hidden = visibility {
                 continue;
             }
 
             // TODO: add a check here for if the projection of the aabb onto the plane has any overlap with the grid frustum intersect
-            computed.set_visible_in_view();
-            visibles.entities.push(entity);
+            view_visibility.set();
+            visible_entities.entities.push(entity);
         }
     }
 }
